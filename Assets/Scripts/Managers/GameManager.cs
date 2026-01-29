@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     public UIManager UI_Manager;
     public GameSceneManager scene_Manager;
     public CameraManager cameraManager;
+    public DeadlockManager deadlockManager;
 
     public enum GameState {
     Prepare,
@@ -22,10 +23,5 @@ public class GameManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
-    }
-
-    private void Start()
-    {
-        board_Manager.CreateGrid();
     }
 }

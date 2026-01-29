@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Block : MonoBehaviour
 {
@@ -11,22 +12,32 @@ public class Block : MonoBehaviour
     private SpriteRenderer _spriteRenderer;
     private BoxCollider2D _boxCollider;
 
+    private BlockSet _blockSet;
+
+    public Vector3 OriginalScale { get; private set; }
+
     private void Awake()
     {
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _boxCollider = GetComponent<BoxCollider2D>();
     }
 
-    public void Init(int x, int y, int colorID, Sprite sprite)
+    private void Update()
+    {
+        HandleLayer();
+    }
+
+    public void Init(int x, int y, int colorID, BlockSet set)
     {
         this.x = x;
         this.y = y;
         this.colorID = colorID;
-        _spriteRenderer.sprite = sprite;
+
+        this._blockSet = set;
+        _spriteRenderer.sprite = _blockSet.defaultSprite;
         gameObject.name = $"Block {x},{y}";
 
         HandleBlockSpriteSize();
-        HandleLayer();
     }
 
     private void HandleBlockSpriteSize()
@@ -41,7 +52,9 @@ public class Block : MonoBehaviour
         if (currentMaxSize > 0)
         {
             float newScale = targetSize / currentMaxSize;
-            transform.localScale = new Vector3(newScale, newScale, 0.1f);
+            Vector3 calculatedScale = new Vector3(newScale, newScale, 0.1f);
+            transform.localScale = calculatedScale;
+            OriginalScale = calculatedScale;
         }
     }
 
@@ -57,8 +70,23 @@ public class Block : MonoBehaviour
         _spriteRenderer.sortingOrder = (int)(posY * 10);
     }
 
-    private void OnMouseDown()
+    public void UpdateVisualState(int groupSize, int condA, int condB, int condC)
     {
-        Debug.Log($"Týklandý: {x},{y}");
+        if(groupSize >= condC)
+        {
+            if (_blockSet.iconCSprite != null) _spriteRenderer.sprite = _blockSet.iconCSprite;
+        }
+        else if (groupSize >= condB)
+        {
+            if (_blockSet.iconBSprite != null) _spriteRenderer.sprite = _blockSet.iconBSprite;
+        }
+        else if (groupSize >= condA)
+        {
+            if (_blockSet.iconASprite != null) _spriteRenderer.sprite = _blockSet.iconASprite;
+        }
+        else
+        {
+            _spriteRenderer.sprite = _blockSet.defaultSprite;
+        }
     }
 }
