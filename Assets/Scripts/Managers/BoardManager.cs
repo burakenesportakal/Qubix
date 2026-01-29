@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 [System.Serializable]
 public struct BlockSet
@@ -67,6 +68,8 @@ public class BoardManager : MonoBehaviour
     {
         if (_isProcessing) return;
 
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+
         if (Input.GetMouseButtonDown(0))
         {
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -128,6 +131,17 @@ public class BoardManager : MonoBehaviour
 
     public void CreateGrid()
     {
+        if (PlayerPrefs.HasKey("BoardWidth"))
+        {
+            width = PlayerPrefs.GetInt("BoardWidth");
+            height = PlayerPrefs.GetInt("BoardHeight");
+            colorCount = PlayerPrefs.GetInt("ColorCount");
+
+            _conditionA = PlayerPrefs.GetInt("CondA");
+            _conditionB = PlayerPrefs.GetInt("CondB");
+            _conditionC = PlayerPrefs.GetInt("CondC");
+        }
+
         GeneratePool();
         _allBlocks = new Block[width, height];
 

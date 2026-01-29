@@ -6,8 +6,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Managers")]
     public BoardManager board_Manager;
-    public UIManager UI_Manager;
-    public GameSceneManager scene_Manager;
+    public UI_Manager UI_Manager;
     public CameraManager cameraManager;
     public DeadlockManager deadlockManager;
 
