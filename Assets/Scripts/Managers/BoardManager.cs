@@ -45,7 +45,7 @@ public class BoardManager : MonoBehaviour
 
     [Header("Animation")]
     [SerializeField] private float _fallSpeed = 10f;
-   
+
     private IEnumerator Start()
     {
         _isProcessing = true;
@@ -66,30 +66,24 @@ public class BoardManager : MonoBehaviour
 
     private void Update()
     {
-        if (_isProcessing) return;
+        if (_isProcessing || !Input.GetMouseButtonDown(0) || EventSystem.current.IsPointerOverGameObject()) return;
 
-        if (EventSystem.current.IsPointerOverGameObject()) return;
+        Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
 
-        if (Input.GetMouseButtonDown(0))
+        if (hit.collider != null)
         {
-            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
-
-            if (hit.collider != null)
+            Block clickedBlock = hit.collider.GetComponent<Block>();
+            if (clickedBlock != null)
             {
-                Block clickedBlock = hit.collider.GetComponent<Block>();
-
-                if (clickedBlock != null)
+                List<Block> connectedBlocks = GetConnectedBlocks(clickedBlock);
+                if (connectedBlocks.Count >= 2)
                 {
-                    List<Block> connectedBlocks = GetConnectedBlocks(clickedBlock);
+                    if (SoundManager.Instance != null)
+                        SoundManager.Instance.PlayConditionSounds(connectedBlocks.Count, _conditionA, _conditionB, _conditionC);
 
-                    Debug.Log($"Tiklanan Renk ID: {clickedBlock.colorID} | Bagli Blok Sayisi: {connectedBlocks.Count}");
-
-                    if (connectedBlocks.Count >= 2)
-                    {
-                        RemoveMatches(connectedBlocks);
-                        StartCoroutine(FillHolesAnimated());
-                    }
+                    RemoveMatches(connectedBlocks);
+                    StartCoroutine(FillHolesAnimated());
                 }
             }
         }
@@ -97,13 +91,12 @@ public class BoardManager : MonoBehaviour
 
     private void GeneratePool()
     {
-        _inactivePool = new List<Block>();
-        int poolSize = width * height * 2;
+        int poolSize = width * height;
+        _inactivePool = new List<Block>(poolSize);
 
         for (int i = 0; i < poolSize; i++)
         {
-            GameObject newBlock = Instantiate(blockPrefab);
-            newBlock.transform.parent = this.transform;
+            GameObject newBlock = Instantiate(blockPrefab, transform);
             Block blockScript = newBlock.GetComponent<Block>();
             newBlock.SetActive(false);
             _inactivePool.Add(blockScript);
@@ -120,13 +113,9 @@ public class BoardManager : MonoBehaviour
             selectedBlock.gameObject.SetActive(true);
             return selectedBlock;
         }
-        else
-        {
-            GameObject newBlock = Instantiate(blockPrefab);
-            newBlock.transform.parent = this.transform;
-            Block newBlockScript = newBlock.GetComponent<Block>();
-            return newBlockScript;
-        }
+
+        GameObject newBlock = Instantiate(blockPrefab, transform);
+        return newBlock.GetComponent<Block>();
     }
 
     public void CreateGrid()
@@ -150,20 +139,14 @@ public class BoardManager : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 Block block = GetBlockFromPool();
-                block.transform.position = new Vector2(x, y);
                 int randomColorID = Random.Range(0, colorCount);
+                block.transform.position = new Vector2(x, y);
                 block.Init(x, y, randomColorID, blockSets[randomColorID]);
                 _allBlocks[x, y] = block;
             }
         }
         if (cameraManager != null)
-        {
             cameraManager.AdjustCamera(width, height);
-        }
-        else
-        {
-            Debug.LogError("CameraManager atanmam��");
-        }
 
         CreateBoardFrame();
         UpdateBoardVisuals();
@@ -179,26 +162,29 @@ public class BoardManager : MonoBehaviour
     {
         List<Block> result = new List<Block>();
         Queue<Block> blocksToCheck = new Queue<Block>();
+        HashSet<Block> visited = new HashSet<Block>();
 
         blocksToCheck.Enqueue(startBlock);
+        visited.Add(startBlock);
         result.Add(startBlock);
 
         int targetColorID = startBlock.colorID;
-
-        Vector2[] directions = { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
+        int[] dx = { -1, 1, 0, 0 };
+        int[] dy = { 0, 0, 1, -1 };
 
         while (blocksToCheck.Count > 0)
         {
             Block current = blocksToCheck.Dequeue();
 
-            foreach (Vector2 direction in directions)
+            for (int i = 0; i < 4; i++)
             {
-                int nextX = current.x + (int)direction.x;
-                int nextY = current.y + (int)direction.y;
+                int nextX = current.x + dx[i];
+                int nextY = current.y + dy[i];
 
                 Block neighbor = GetBlockAt(nextX, nextY);
-                if (neighbor != null && !result.Contains(neighbor) && neighbor.colorID == targetColorID && neighbor.gameObject.activeSelf)
+                if (neighbor != null && !visited.Contains(neighbor) && neighbor.colorID == targetColorID)
                 {
+                    visited.Add(neighbor);
                     result.Add(neighbor);
                     blocksToCheck.Enqueue(neighbor);
                 }
@@ -221,8 +207,8 @@ public class BoardManager : MonoBehaviour
 
     private void CreateBoardFrame()
     {
-        float xCenter = (width - 1) / 2f;
-        float yCenter = (height - 1) / 2f;
+        float xCenter = (width - 1) * 0.5f;
+        float yCenter = (height - 1) * 0.5f;
 
         GameObject frame = Instantiate(borderPrefab, transform);
         frame.transform.position = new Vector3(xCenter, yCenter, 0);
@@ -242,88 +228,77 @@ public class BoardManager : MonoBehaviour
     private IEnumerator FillHolesAnimated()
     {
         _isProcessing = true;
-        bool crashOccured = false;
-        try
+
+        for (int x = 0; x < width; x++)
         {
+            int floor = 0;
+            for (int y = 0; y < height; y++)
+            {
+                Block block = _allBlocks[x, y];
+                if (block != null)
+                {
+                    if (y > floor)
+                    {
+                        _allBlocks[x, y] = null;
+                        _allBlocks[x, floor] = block;
+                        block.x = x;
+                        block.y = floor;
+                    }
+                    floor++;
+                }
+            }
+            for (int y = floor; y < height; y++)
+            {
+                Block newBlock = GetBlockFromPool();
+                newBlock.transform.position = new Vector3(x, height + (y - floor) + 1, 0);
+                int randomID = Random.Range(0, colorCount);
+                newBlock.Init(x, y, randomID, blockSets[randomID]);
+                _allBlocks[x, y] = newBlock;
+            }
+        }
+
+        bool isMoving = true;
+        float fallDelta = _fallSpeed * Time.deltaTime;
+
+        while (isMoving)
+        {
+            isMoving = false;
+            fallDelta = _fallSpeed * Time.deltaTime;
+
             for (int x = 0; x < width; x++)
             {
-                int floor = 0;
                 for (int y = 0; y < height; y++)
                 {
                     Block block = _allBlocks[x, y];
                     if (block != null)
                     {
-                        if (y > floor)
+                        Vector3 targetPos = new Vector3(x, y, 0);
+                        Vector3 currentPos = block.transform.position;
+
+                        if (Mathf.Abs(currentPos.y - targetPos.y) > 0.05f)
                         {
-                            _allBlocks[x, y] = null;
-                            _allBlocks[x, floor] = block;
-                            block.x = x;
-                            block.y = floor;
-                            block.name = $"Block {x},{floor}";
+                            block.transform.position = Vector3.MoveTowards(currentPos, targetPos, fallDelta);
+                            isMoving = true;
                         }
-                        floor++;
-                    }
-                }
-                for (int y = floor; y < height; y++)
-                {
-                    Block newBlock = GetBlockFromPool();
-                    Vector3 startPos = new Vector3(x, height + (y - floor) + 1, 0);
-                    newBlock.transform.position = startPos;
-
-                    int randomID = Random.Range(0, colorCount);
-                    newBlock.Init(x, y, randomID, blockSets[randomID]);
-                    _allBlocks[x, y] = newBlock;
-                }
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("DATA HATASI: " + e.Message);
-            crashOccured = true;
-        }
-
-        if (!crashOccured)
-        {
-            bool isMoving = true;
-            while (isMoving)
-            {
-                isMoving = false;
-                try
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        for (int y = 0; y < height; y++)
+                        else
                         {
-                            Block block = _allBlocks[x, y];
-                            if (block != null)
-                            {
-                                Vector3 targetPos = new Vector3(x, y, 0);
-                                float dist = Vector3.Distance(block.transform.position, targetPos);
-                                if (dist > 0.05f)
-                                {
-                                    block.transform.position = Vector3.MoveTowards(block.transform.position, targetPos, _fallSpeed * Time.deltaTime);
-                                    isMoving = true;
-                                }
-                                else
-                                {
-                                    block.transform.position = targetPos;
-                                }
-                            }
+                            block.transform.position = targetPos;
+                            block.UpdateSortingOrder();
                         }
                     }
                 }
-                catch { isMoving = false; }
-                yield return null;
             }
+            yield return null;
+        }
 
+        UpdateBoardVisuals();
+
+        if (deadlockManager.isDeadlocked(_allBlocks, width, height))
+        {
+            yield return StartCoroutine(deadlockManager.ShuffleBoardProcces(_allBlocks, width, height, blockSets));
             UpdateBoardVisuals();
-
-            if (deadlockManager.isDeadlocked(_allBlocks, width, height))
-            {
-                yield return StartCoroutine(deadlockManager.ShuffleBoardProcces(_allBlocks, width, height, blockSets));
-                UpdateBoardVisuals();
-            }
         }
+
         _isProcessing = false;
     }
 

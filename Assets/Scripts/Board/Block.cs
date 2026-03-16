@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class Block : MonoBehaviour
 {
@@ -8,10 +7,8 @@ public class Block : MonoBehaviour
     public int x, y;
     public int colorID;
 
-
     private SpriteRenderer _spriteRenderer;
     private BoxCollider2D _boxCollider;
-
     private BlockSet _blockSet;
 
     public Vector3 OriginalScale { get; private set; }
@@ -22,49 +19,31 @@ public class Block : MonoBehaviour
         _boxCollider = GetComponent<BoxCollider2D>();
     }
 
-    private void Update()
-    {
-        HandleLayer();
-    }
-
     public void Init(int x, int y, int colorID, BlockSet set)
     {
         this.x = x;
         this.y = y;
         this.colorID = colorID;
+        _blockSet = set;
+        _spriteRenderer.sprite = set.defaultSprite;
 
-        this._blockSet = set;
-        _spriteRenderer.sprite = _blockSet.defaultSprite;
-        gameObject.name = $"Block {x},{y}";
+        if (_boxCollider != null) _boxCollider.size = _spriteRenderer.sprite.bounds.size;
 
-        HandleBlockSpriteSize();
-    }
-
-    private void HandleBlockSpriteSize()
-    {
-        HandleColliderSize();
-
-        transform.localScale = Vector3.one;
-        Bounds bounds = _spriteRenderer.bounds;
-        float targetSize = blockSpace;
-        float currentMaxSize = Mathf.Max(bounds.size.x, bounds.size.y);
-
-        if (currentMaxSize > 0)
+        if (OriginalScale == Vector3.zero)
         {
-            float newScale = targetSize / currentMaxSize;
-            Vector3 calculatedScale = new Vector3(newScale, newScale, 0.1f);
-            transform.localScale = calculatedScale;
-            OriginalScale = calculatedScale;
+            Bounds bounds = _spriteRenderer.bounds;
+            float currentMaxSize = Mathf.Max(bounds.size.x, bounds.size.y);
+            if (currentMaxSize > 0)
+            {
+                float newScale = blockSpace / currentMaxSize;
+                OriginalScale = new Vector3(newScale, newScale, 0.1f);
+            }
         }
+        transform.localScale = OriginalScale;
+        UpdateSortingOrder();
     }
 
-    private void HandleColliderSize()
-    {
-        if (_boxCollider != null)
-            _boxCollider.size = _spriteRenderer.sprite.bounds.size;
-    }
-
-    private void HandleLayer()
+    public void UpdateSortingOrder()
     {
         float posY = transform.position.y;
         _spriteRenderer.sortingOrder = (int)(posY * 10);
@@ -72,21 +51,12 @@ public class Block : MonoBehaviour
 
     public void UpdateVisualState(int groupSize, int condA, int condB, int condC)
     {
-        if(groupSize >= condC)
-        {
-            if (_blockSet.iconCSprite != null) _spriteRenderer.sprite = _blockSet.iconCSprite;
-        }
-        else if (groupSize >= condB)
-        {
-            if (_blockSet.iconBSprite != null) _spriteRenderer.sprite = _blockSet.iconBSprite;
-        }
-        else if (groupSize >= condA)
-        {
-            if (_blockSet.iconASprite != null) _spriteRenderer.sprite = _blockSet.iconASprite;
-        }
-        else
-        {
-            _spriteRenderer.sprite = _blockSet.defaultSprite;
-        }
+        Sprite newSprite;
+        if (groupSize >= condC && _blockSet.iconCSprite != null) newSprite = _blockSet.iconCSprite;
+        else if (groupSize >= condB && _blockSet.iconBSprite != null) newSprite = _blockSet.iconBSprite;
+        else if (groupSize >= condA && _blockSet.iconASprite != null) newSprite = _blockSet.iconASprite;
+        else newSprite = _blockSet.defaultSprite;
+
+        if (_spriteRenderer.sprite != newSprite) _spriteRenderer.sprite = newSprite;
     }
 }

@@ -22,17 +22,20 @@ public class DeadlockManager : MonoBehaviour
 
     public IEnumerator ShuffleBoardProcces(Block[,] allBlocks, int width, int height, BlockSet[] blockSets)
     {
-
-        float animDuration = 0.4f;
+        const float animDuration = 0.4f;
         float timer = 0;
 
         while (timer < animDuration)
         {
             timer += Time.deltaTime;
-            float ratio = Mathf.Lerp(1f, 0f, timer / animDuration);
-            foreach (Block block in allBlocks)
+            float ratio = 1f - (timer / animDuration);
+            for (int x = 0; x < width; x++)
             {
-                if (block != null) block.transform.localScale = block.OriginalScale * ratio;
+                for (int y = 0; y < height; y++)
+                {
+                    Block block = allBlocks[x, y];
+                    if (block != null) block.transform.localScale = block.OriginalScale * ratio;
+                }
             }
             yield return null;
         }
@@ -116,21 +119,29 @@ public class DeadlockManager : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         timer = 0;
-        while(timer< animDuration)
+        while(timer < animDuration)
         {
             timer += Time.deltaTime;
-            float ratio = Mathf.Lerp(0f, 1f, timer / animDuration);
+            float ratio = timer / animDuration;
 
-            foreach(Block block in allBlocks)
+            for (int x = 0; x < width; x++)
             {
-                if (block != null) block.transform.localScale = block.OriginalScale * ratio;
+                for (int y = 0; y < height; y++)
+                {
+                    Block block = allBlocks[x, y];
+                    if (block != null) block.transform.localScale = block.OriginalScale * ratio;
+                }
             }
             yield return null;
         }
 
-        foreach (Block block in allBlocks)
+        for (int x = 0; x < width; x++)
         {
-            if (block != null) block.transform.localScale = block.OriginalScale;
+            for (int y = 0; y < height; y++)
+            {
+                Block block = allBlocks[x, y];
+                if (block != null) block.transform.localScale = block.OriginalScale;
+            }
         }
     }
 

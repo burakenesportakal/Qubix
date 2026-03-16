@@ -94,6 +94,7 @@ public class UI_Manager : MonoBehaviour
 
     public void OnResumeClicked()
     {
+        SaveSettingsFromUI();
         settingsPanel.SetActive(false);
         Time.timeScale = 1f;
     }
@@ -146,9 +147,9 @@ public class UI_Manager : MonoBehaviour
 
     private void SetupSliderLimits()
     {
-        if (condASlider) { condASlider.minValue = 3; condASlider.maxValue = 8; condASlider.wholeNumbers = true; }
-        if (condBSlider) { condBSlider.maxValue = 16; condBSlider.wholeNumbers = true; }
-        if (condCSlider) { condCSlider.maxValue = 24; condCSlider.wholeNumbers = true; }
+        if (condASlider) { condASlider.minValue = 3; condASlider.maxValue = 8;}
+        if (condBSlider) { condBSlider.maxValue = 16;}
+        if (condCSlider) { condCSlider.maxValue = 24;}
     }
 
     private void ValidateSliders()

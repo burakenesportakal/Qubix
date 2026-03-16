@@ -1,35 +1,43 @@
-using UnityEngine; 
+using UnityEngine;
+
 public class BackgroundManager : MonoBehaviour
 {
     public Camera mainCamera;
     private SpriteRenderer _spriteRenderer;
+    private Vector2 _spriteSize;
+    private float _lastOrthographicSize;
+    private float _lastAspect;
 
     private void Awake()
     {
         if (mainCamera == null) mainCamera = Camera.main;
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        if (_spriteRenderer != null && _spriteRenderer.sprite != null)
+            _spriteSize = _spriteRenderer.sprite.bounds.size;
+        
+        FitBackgroundToCamera();
     }
 
     private void LateUpdate() 
     {
-        FitBackgroundToCamera();
+        if (mainCamera.orthographicSize != _lastOrthographicSize || mainCamera.aspect != _lastAspect)
+            FitBackgroundToCamera();
     }
 
     private void FitBackgroundToCamera()
     {
         if (_spriteRenderer == null || mainCamera == null) return;
-        transform.position = new Vector3(mainCamera.transform.position.x, mainCamera.transform.position.y, transform.position.z);
+        
+        Vector3 camPos = mainCamera.transform.position;
+        transform.position = new Vector3(camPos.x, camPos.y, transform.position.z);
 
-        float cameraHeight = 2f * mainCamera.orthographicSize;
-        float cameraWidth = cameraHeight * mainCamera.aspect;
+        _lastOrthographicSize = mainCamera.orthographicSize;
+        _lastAspect = mainCamera.aspect;
 
-        Vector2 spriteSize = _spriteRenderer.sprite.bounds.size;
+        float cameraHeight = 2f * _lastOrthographicSize;
+        float cameraWidth = cameraHeight * _lastAspect;
 
-        float scaleY = cameraHeight / spriteSize.y;
-        float scaleX = cameraWidth / spriteSize.x;
-
-        float finalScale = Mathf.Max(scaleX, scaleY);
-
+        float finalScale = Mathf.Max(cameraWidth / _spriteSize.x, cameraHeight / _spriteSize.y);
         transform.localScale = new Vector3(finalScale, finalScale, 1f);
     }
 }
