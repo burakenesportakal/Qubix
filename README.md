@@ -1,4 +1,4 @@
-<h1 align="center">🧩Qubix (Unity)</h1>
+<img width="1546" height="871" alt="2" src="https://github.com/user-attachments/assets/5637e854-b0a7-4408-9f8c-007a05c29d78" /><h1 align="center">🧩Qubix (Unity)</h1>
 
 <p align="center">
   Bu proje, Unity ile geliştirilmiş, dinamik ızgara (grid) sistemine sahip, özelleştirilebilir bir 2D eşleştirme (Blast/Match) bulmaca oyunudur. Modüler yapısı ve esnek ayar menüsü sayesinde hem oyuncular hem de geliştiriciler için harika bir temel sunar.
@@ -26,20 +26,16 @@
 
 <h2>📸 Ekran Görüntüleri</h2>
 
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="https://github.com/senin-yukledigin-gorsel-1-urlsi" width="400" alt="Ana Menü">
-      <br>
-      <i>Ana Menü ve Ayarlar</i>
-    </td>
-    <td align="center">
-      <img src="https://github.com/senin-yukledigin-gorsel-2-urlsi" width="400" alt="Oynanış">
-      <br>
-      <i>Oyun İçi Oynanış</i>
-    </td>
-  </tr>
-</table>
+<img width="1552" height="868" alt="1" src="https://github.com/user-attachments/assets/ef8284b8-4907-4a66-8f50-557e829776db" />
+![<img width="1551" height="870" alt="3" src="https://github.com/user-attachments/assets/05cdee42-fba5-43f5-8778-adc7870e438e" />
+<img width="1546" height="871" alt="2" src="https://github.com/user-attachments/assets/b0f799dc-45f9-4122-97bc-d6d7794b4dad" />
+Uploading 2.PNG…]()<img width="1551" height="870" alt="3" src="https://github.com/user-attachments/assets/9f7cca68-aea9-4c66-ad74-4d264a567242" />
+<img width="1552" height="868" alt="1" src="https://github.com/user-attachments/assets/27d3d7ec-b8f2-4f93-aff2-71d0c7649c79" />
+<img width="1546" height="871" alt="2" src="https://github.com/user-attachments/assets/7d9dd786-81e3-4bbd-8eeb-8d630916cce6" />
+<img width="1552" height="868" alt="1" src="https://github.com/user-attachments/assets/dd5940a3-33d9-4811-b07c-df3b817ea391" />
+<img width="1551" height="870" alt="3" src="https://github.com/user-attachments/assets/7a4fbf4f-71f4-45dd-8714-3c227eae97b9" />
+
+
 
 <h2>🛠️ Kurulum</h2>
 <ol>
